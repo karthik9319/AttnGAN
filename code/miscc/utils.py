@@ -58,11 +58,7 @@ def build_super_images(real_imgs, captions, ixtoword,
     real_imgs = real_imgs[:nvis]
     if lr_imgs is not None:
         lr_imgs = lr_imgs[:nvis]
-    if att_sze == 17:
-        vis_size = att_sze * 16
-    else:
-        vis_size = real_imgs.size(2)
-
+    vis_size = att_sze * 16 if att_sze == 17 else real_imgs.size(2)
     text_convas = \
         np.ones([batch_size * FONT_MAX,
                  (max_word_num + 2) * (vis_size + 2), 3],
@@ -116,10 +112,7 @@ def build_super_images(real_imgs, captions, ixtoword,
         num_attn = attn.shape[0]
         #
         img = real_imgs[i]
-        if lr_imgs is None:
-            lrI = img
-        else:
-            lrI = lr_imgs[i]
+        lrI = img if lr_imgs is None else lr_imgs[i]
         row = [lrI, middle_pad]
         row_merge = [img, middle_pad]
         row_beforeNorm = []
@@ -302,15 +295,12 @@ def load_params(model, new_param):
 
 
 def copy_G_params(model):
-    flatten = deepcopy(list(p.data for p in model.parameters()))
-    return flatten
+    return deepcopy([p.data for p in model.parameters()])
 
 
 def mkdir_p(path):
     try:
         os.makedirs(path)
     except OSError as exc:  # Python >2.5
-        if exc.errno == errno.EEXIST and os.path.isdir(path):
-            pass
-        else:
+        if exc.errno != errno.EEXIST or not os.path.isdir(path):
             raise

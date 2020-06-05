@@ -37,21 +37,19 @@ def conv3x3(in_planes, out_planes):
 
 # Upsale the spatial size by a factor of 2
 def upBlock(in_planes, out_planes):
-    block = nn.Sequential(
+    return nn.Sequential(
         nn.Upsample(scale_factor=2, mode='nearest'),
         conv3x3(in_planes, out_planes * 2),
         nn.BatchNorm2d(out_planes * 2),
         GLU())
-    return block
 
 
 # Keep the spatial size
 def Block3x3_relu(in_planes, out_planes):
-    block = nn.Sequential(
+    return nn.Sequential(
         conv3x3(in_planes, out_planes * 2),
         nn.BatchNorm2d(out_planes * 2),
         GLU())
-    return block
 
 
 class ResBlock(nn.Module):
@@ -83,10 +81,7 @@ class RNN_ENCODER(nn.Module):
         self.nlayers = nlayers  # Number of recurrent layers
         self.bidirectional = bidirectional
         self.rnn_type = cfg.RNN_TYPE
-        if bidirectional:
-            self.num_directions = 2
-        else:
-            self.num_directions = 1
+        self.num_directions = 2 if bidirectional else 1
         # number of features in the hidden state
         self.nhidden = nhidden // self.num_directions
 
@@ -351,9 +346,7 @@ class NEXT_STAGE_G(nn.Module):
         self.define_module()
 
     def _make_layer(self, block, channel_num):
-        layers = []
-        for i in range(cfg.GAN.R_NUM):
-            layers.append(block(channel_num))
+        layers = [block(channel_num) for _ in range(cfg.GAN.R_NUM)]
         return nn.Sequential(*layers)
 
     def define_module(self):
@@ -390,8 +383,7 @@ class GET_IMAGE_G(nn.Module):
         )
 
     def forward(self, h_code):
-        out_img = self.img(h_code)
-        return out_img
+        return self.img(h_code)
 
 
 class G_NET(nn.Module):
@@ -493,27 +485,25 @@ class G_DCGAN(nn.Module):
 
 # ############## D networks ##########################
 def Block3x3_leakRelu(in_planes, out_planes):
-    block = nn.Sequential(
+    return nn.Sequential(
         conv3x3(in_planes, out_planes),
         nn.BatchNorm2d(out_planes),
         nn.LeakyReLU(0.2, inplace=True)
     )
-    return block
 
 
 # Downsale the spatial size by a factor of 2
 def downBlock(in_planes, out_planes):
-    block = nn.Sequential(
+    return nn.Sequential(
         nn.Conv2d(in_planes, out_planes, 4, 2, 1, bias=False),
         nn.BatchNorm2d(out_planes),
         nn.LeakyReLU(0.2, inplace=True)
     )
-    return block
 
 
 # Downsale the spatial size by a factor of 16
 def encode_image_by_16times(ndf):
-    encode_img = nn.Sequential(
+    return nn.Sequential(
         # --> state size. ndf x in_size/2 x in_size/2
         nn.Conv2d(3, ndf, 4, 2, 1, bias=False),
         nn.LeakyReLU(0.2, inplace=True),
@@ -530,7 +520,6 @@ def encode_image_by_16times(ndf):
         nn.BatchNorm2d(ndf * 8),
         nn.LeakyReLU(0.2, inplace=True)
     )
-    return encode_img
 
 
 class D_GET_LOGITS(nn.Module):
@@ -569,10 +558,7 @@ class D_NET64(nn.Module):
         ndf = cfg.GAN.DF_DIM
         nef = cfg.TEXT.EMBEDDING_DIM
         self.img_code_s16 = encode_image_by_16times(ndf)
-        if b_jcu:
-            self.UNCOND_DNET = D_GET_LOGITS(ndf, nef, bcondition=False)
-        else:
-            self.UNCOND_DNET = None
+        self.UNCOND_DNET = D_GET_LOGITS(ndf, nef, bcondition=False) if b_jcu else None
         self.COND_DNET = D_GET_LOGITS(ndf, nef, bcondition=True)
 
     def forward(self, x_var):
@@ -590,10 +576,7 @@ class D_NET128(nn.Module):
         self.img_code_s32 = downBlock(ndf * 8, ndf * 16)
         self.img_code_s32_1 = Block3x3_leakRelu(ndf * 16, ndf * 8)
         #
-        if b_jcu:
-            self.UNCOND_DNET = D_GET_LOGITS(ndf, nef, bcondition=False)
-        else:
-            self.UNCOND_DNET = None
+        self.UNCOND_DNET = D_GET_LOGITS(ndf, nef, bcondition=False) if b_jcu else None
         self.COND_DNET = D_GET_LOGITS(ndf, nef, bcondition=True)
 
     def forward(self, x_var):
@@ -614,10 +597,7 @@ class D_NET256(nn.Module):
         self.img_code_s64 = downBlock(ndf * 16, ndf * 32)
         self.img_code_s64_1 = Block3x3_leakRelu(ndf * 32, ndf * 16)
         self.img_code_s64_2 = Block3x3_leakRelu(ndf * 16, ndf * 8)
-        if b_jcu:
-            self.UNCOND_DNET = D_GET_LOGITS(ndf, nef, bcondition=False)
-        else:
-            self.UNCOND_DNET = None
+        self.UNCOND_DNET = D_GET_LOGITS(ndf, nef, bcondition=False) if b_jcu else None
         self.COND_DNET = D_GET_LOGITS(ndf, nef, bcondition=True)
 
     def forward(self, x_var):

@@ -96,9 +96,9 @@ class condGANTrainer(object):
             # TODO: if cfg.TREE.BRANCH_NUM > 3:
         netG.apply(weights_init)
         # print(netG)
-        for i in range(len(netsD)):
-            netsD[i].apply(weights_init)
-            # print(netsD[i])
+        for item in netsD:
+            item.apply(weights_init)
+                # print(netsD[i])
         print('# of netsD', len(netsD))
         #
         epoch = 0
@@ -170,8 +170,8 @@ class condGANTrainer(object):
         print('Save G/Ds models.')
 
     def set_requires_grad_value(self, models_list, brequires):
-        for i in range(len(models_list)):
-            for p in models_list[i].parameters():
+        for models in models_list:
+            for p in models.parameters():
                 p.requires_grad = brequires
 
     def save_img_results(self, netG, noise, sent_emb, words_embs, mask,
@@ -444,10 +444,7 @@ class condGANTrainer(object):
             text_encoder.eval()
 
             # the path to save generated images
-            if cfg.GAN.B_DCGAN:
-                netG = G_DCGAN()
-            else:
-                netG = G_NET()
+            netG = G_DCGAN() if cfg.GAN.B_DCGAN else G_NET()
             s_tmp = cfg.TRAIN.NET_G[:cfg.TRAIN.NET_G.rfind('.pth')]
             model_dir = cfg.TRAIN.NET_G
             state_dict = \

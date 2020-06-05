@@ -209,7 +209,7 @@ def eval(caption):
     urls = generate(caption, wordtoix, ixtoword, text_encoder, netG, blob_service)
     t1 = time.time()
 
-    response = {
+    return {
         'small': urls[0],
         'medium': urls[1],
         'large': urls[2],
@@ -218,8 +218,6 @@ def eval(caption):
         'caption': caption,
         'elapsed': t1 - t0
     }
-
-    return response
 
 if __name__ == "__main__":
     caption = "the bird has a yellow crown and a black eyering that is round"

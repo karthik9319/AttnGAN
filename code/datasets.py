@@ -100,16 +100,13 @@ class TextDataset(data.Dataset):
         self.embeddings_num = cfg.TEXT.CAPTIONS_PER_IMAGE
 
         self.imsize = []
-        for i in range(cfg.TREE.BRANCH_NUM):
+        for _ in range(cfg.TREE.BRANCH_NUM):
             self.imsize.append(base_size)
             base_size = base_size * 2
 
         self.data = []
         self.data_dir = data_dir
-        if data_dir.find('birds') != -1:
-            self.bbox = self.load_bbox()
-        else:
-            self.bbox = None
+        self.bbox = self.load_bbox() if data_dir.find('birds') != -1 else None
         split_dir = os.path.join(data_dir, split)
 
         self.filenames, self.captions, self.ixtoword, \
@@ -144,8 +141,8 @@ class TextDataset(data.Dataset):
 
     def load_captions(self, data_dir, filenames):
         all_captions = []
-        for i in range(len(filenames)):
-            cap_path = '%s/text/%s.txt' % (data_dir, filenames[i])
+        for filename in filenames:
+            cap_path = '%s/text/%s.txt' % (data_dir, filename)
             with open(cap_path, "r") as f:
                 captions = f.read().decode('utf8').split('\n')
                 cnt = 0
@@ -172,8 +169,7 @@ class TextDataset(data.Dataset):
                     if cnt == self.embeddings_num:
                         break
                 if cnt < self.embeddings_num:
-                    print('ERROR: the captions for %s less than %d'
-                          % (filenames[i], cnt))
+                    print('ERROR: the captions for %s less than %d' % (filename, cnt))
         return all_captions
 
     def build_dictionary(self, train_captions, test_captions):
@@ -185,10 +181,8 @@ class TextDataset(data.Dataset):
 
         vocab = [w for w in word_counts if word_counts[w] >= 0]
 
-        ixtoword = {}
-        ixtoword[0] = '<end>'
-        wordtoix = {}
-        wordtoix['<end>'] = 0
+        ixtoword = {0: '<end>'}
+        wordtoix = {'<end>': 0}
         ix = 1
         for w in vocab:
             wordtoix[w] = ix
@@ -275,7 +269,7 @@ class TextDataset(data.Dataset):
         # pad with 0s (i.e., '<end>')
         x = np.zeros((cfg.TEXT.WORDS_NUM, 1), dtype='int64')
         x_len = num_words
-        if num_words <= cfg.TEXT.WORDS_NUM:
+        if x_len <= cfg.TEXT.WORDS_NUM:
             x[:num_words, 0] = sent_caption
         else:
             ix = list(np.arange(num_words))  # 1, 2, 3,..., maxNum

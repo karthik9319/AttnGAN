@@ -42,8 +42,7 @@ def parse_args():
     parser.add_argument('--gpu', dest='gpu_id', type=int, default=0)
     parser.add_argument('--data_dir', dest='data_dir', type=str, default='')
     parser.add_argument('--manualSeed', type=int, help='manual seed')
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 
 def train(dataloader, cnn_model, rnn_model, batch_size,

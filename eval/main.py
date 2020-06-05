@@ -15,7 +15,7 @@ app.wsgi_app = WSGIApplication(os.environ["TELEMETRY"], app.wsgi_app)
 
 @app.route('/api/v1.0/bird', methods=['POST'])
 def create_bird():
-    if not request.json or not 'caption' in request.json:
+    if not request.json or 'caption' not in request.json:
         abort(400)
 
     caption = request.json['caption']
@@ -37,7 +37,7 @@ def create_bird():
 
 @app.route('/api/v1.0/birds', methods=['POST'])
 def create_birds():
-    if not request.json or not 'caption' in request.json:
+    if not request.json or 'caption' not in request.json:
         abort(400)
 
     caption = request.json['caption']

@@ -175,15 +175,12 @@ def load_params(model, new_param):
 
 
 def copy_G_params(model):
-    flatten = deepcopy(list(p.data for p in model.parameters()))
-    return flatten
+    return deepcopy([p.data for p in model.parameters()])
 
 
 def mkdir_p(path):
     try:
         os.makedirs(path)
     except OSError as exc:  # Python >2.5
-        if exc.errno == errno.EEXIST and os.path.isdir(path):
-            pass
-        else:
+        if exc.errno != errno.EEXIST or not os.path.isdir(path):
             raise
